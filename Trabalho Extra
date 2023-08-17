@@ -1,0 +1,117 @@
+//Aluno: Jader Santos Rodrigues Filho
+//Trabalho Extra
+//Jogo Dos Oito
+
+#include <stdio.h>
+#include <stdlib.h>
+
+void imprimir_tabuleiro(int tabuleiro[3][3]) {
+    // Função para imprimir o tabuleiro de forma visual
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            // Imprime cada peça do tabuleiro, substituindo 0 por espaço vazio
+            printf(" %d", tabuleiro[i][j] != 0 ? tabuleiro[i][j] : ' ');
+            if (j < 2) {
+                printf(" |");  // Separação das peças por '|'
+            }
+        }
+        printf("\n------------\n");  // Linha horizontal após cada linha de peças
+    }
+}
+
+int eh_estado_final(int tabuleiro[3][3], int objetivo[3][3]) {
+    // Função para verificar se o tabuleiro é igual ao estado objetivo
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (tabuleiro[i][j] != objetivo[i][j]) {
+                return 0;  // Tabuleiro não é igual ao objetivo
+            }
+        }
+    }
+    return 1;  // Tabuleiro é igual ao objetivo
+}
+
+void obter_vizinhos(int tabuleiro[3][3], int vizinhos[4][3][3]) {
+    // Função para obter os tabuleiros vizinhos válidos
+    int dx[4] = {0, 0, 1, -1};
+    int dy[4] = {1, -1, 0, 0};
+    
+    for (int k = 0; k < 4; k++) {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (tabuleiro[i][j] == 0) {
+                    int ni = i + dx[k];
+                    int nj = j + dy[k];
+                    if (ni >= 0 && ni < 3 && nj >= 0 && nj < 3) {
+                        // Criar novo tabuleiro trocando a posição da peça vazia com uma adjacente
+                        for (int x = 0; x < 3; x++) {
+                            for (int y = 0; y < 3; y++) {
+                                vizinhos[k][x][y] = tabuleiro[x][y];
+                            }
+                        }
+                        vizinhos[k][i][j] = tabuleiro[ni][nj];
+                        vizinhos[k][ni][nj] = 0;
+                    }
+                }
+            }
+        }
+    }
+}
+
+int dfs_limite(int tabuleiro[3][3], int objetivo[3][3], int limite, int caminho[30][3][3], int passo) {
+    // Busca em profundidade com limite
+    if (eh_estado_final(tabuleiro, objetivo)) {
+        return passo;
+    }
+
+    if (limite == 0) {
+        return -1;
+    }
+
+    int vizinhos[4][3][3];
+    obter_vizinhos(tabuleiro, vizinhos);
+
+    for (int k = 0; k < 4; k++) {
+        if (dfs_limite(vizinhos[k], objetivo, limite - 1, caminho, passo + 1) != -1) {
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    caminho[passo][i][j] = tabuleiro[i][j];
+                }
+            }
+            return passo;
+        }
+    }
+
+    return -1;
+}
+
+int main() {
+    int tabuleiro_inicial[3][3] = {
+        {1, 2, 3},
+        {4, 5, 6},
+        {7, 0, 8}
+    };
+
+    int tabuleiro_objetivo[3][3] = {
+        {1, 2, 3},
+        {4, 5, 6},
+        {7, 8, 0}
+    };
+
+    int profundidade_maxima = 30;  // Define a profundidade máxima para a busca
+
+    int solucao[30][3][3];
+    int passos = dfs_limite(tabuleiro_inicial, tabuleiro_objetivo, profundidade_maxima, solucao, 0);
+
+    if (passos != -1) {
+        for (int p = 0; p <= passos; p++) {
+            printf("Passo %d:\n", p + 1);
+            imprimir_tabuleiro(solucao[p]);
+            printf("\n");
+        }
+    } else {
+        printf("Nenhuma solução encontrada dentro do limite de profundidade.\n");
+    }
+
+    return 0;
+}
